@@ -5,10 +5,28 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.Promise;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.ReactActivityDelegate;
+import com.facebook.react.ReactApplication;
+
+import com.stripe.android.model.Card;
+import com.stripe.android.Stripe;
+import com.stripe.android.TokenCallback;
+import com.stripe.android.model.Token;
+import com.stripe.android.model.BankAccount;
+
+import java.util.Date;
 
 import android.widget.Toast;
+import android.content.Context;
 
 public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
+  private static final String CARD_INVALID = "CARD_INVALID";
+  private static final String CARD_VALID = "CARD_VALID";
+  private static final String BAD_TOKEN = "BAD_TOKEN";
 
   private final ReactApplicationContext reactContext;
 
@@ -28,13 +46,13 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void show(int i Promise promise) {
+  public void incremen(int i, Promise promise) {
     i += 3;
     promise.resolve(i);
   }
 
   @ReactMethod
-  public void validateCard(String cardNumber, String cardExpMonth, String cardExpYear, String cardCVC, Promise promise) {
+  public void validateCard(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC, Promise promise) {
     Card card = new Card(
       cardNumber,
       cardExpMonth,
@@ -43,15 +61,17 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
     );
 
     if (card.validateCard()) {
-      promise.resolve();
+      promise.resolve(CARD_VALID);
     }else{
       promise.reject(CARD_INVALID);
     }
   }
 
   @ReactMethod
-  public void createToken(String cardNumber, String cardExpMonth, String cardExpYear, String cardCVC,
-      Promise promise) {
+  public void createToken(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC,
+      final Promise promise) {
+    Context ctx = reactContext.getApplicationContext();
+    
     Card card = new Card(cardNumber, cardExpMonth, cardExpYear, cardCVC);
 
     if (!card.validateCard()) {
@@ -59,7 +79,7 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
       return;
     }
 
-    Stripe stripe = new Stripe(mContext, "pk_test_TYooMQauvdEDq54NiTphI7jx");
+    Stripe stripe = new Stripe(ctx, "pk_test_N9MRUopzQht3lFPk3U9r32yq");
     stripe.createToken(
       card,
       new TokenCallback() {
@@ -74,14 +94,10 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
           map.putString("type", token.getType());
           map.putString("object", "token");
 
-          Date created = token.getCreated();
-          map.putDouble("created", Double(date.getTime()));
-
           BankAccount ba = token.getBankAccount();
           if(ba == null){
             map.putNull("bank_account");
           }else{
-            baMap.putString("id", ba.getId());
             baMap.putString("account_holder_name", ba.getAccountHolderName());
             baMap.putString("account_holder_type", ba.getAccountHolderType());
             baMap.putString("bank_name", ba.getBankName());
@@ -111,14 +127,12 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
             cardMap.putString("country", cd.getCountry());
             cardMap.putString("currency", cd.getCurrency());
             cardMap.putString("cvc_check", cd.getCvcCheck());
-            cardMap.putString("exp_month", cd.getExpMonth());
-            cardMap.putString("exp_year", cd.getExpYear());
+            cardMap.putInt("exp_month", cd.getExpMonth());
+            cardMap.putInt("exp_year", cd.getExpYear());
             cardMap.putString("fingerprint", cd.getFingerprint());
             cardMap.putString("funding", cd.getFunding());
             cardMap.putString("last4", cd.getLast4());
-            cardMap.putMap("metadata", cd.getMetadata());
             cardMap.putString("name", cd.getName());
-            cardMap.putString("tokenization_method", cd.getTokenizationMethod());
             map.putMap("card", cardMap);
           }
 
@@ -126,7 +140,7 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
         }
         public void onError(Exception error) {
           // Show localized error message
-          promise.reject(BAD_TOKEN, e.getMessage());
+          promise.reject(BAD_TOKEN, error.getMessage());
         }
       }
     );
