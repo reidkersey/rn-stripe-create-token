@@ -18,9 +18,6 @@ import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Token;
 import com.stripe.android.model.BankAccount;
 
-import androidx.annotation.Nullable;
-import androidx.annotation.Size;
-
 import java.util.Date;
 import java.util.Map;
 
@@ -73,7 +70,7 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void createToken(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC, String name, String zip, final Promise promise) {
-    this.createToken_all(cardNumber, cardExpMonth, cardExpYear, cardCVC, name, zip, null, null, null, null, null, null, null, promise);
+    this.createToken_all(cardNumber, cardExpMonth, cardExpYear, cardCVC, name, zip, null, null, null, null, null, null, promise);
   }
 
   @ReactMethod
@@ -84,12 +81,17 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
             String addressState,
             String addressCountry,
             String currency,
-            @Nullable Map<String, String> metadata,
       final Promise promise) {
     Context ctx = reactContext.getApplicationContext();
     
-    Card card = new Card(cardNumber, cardExpMonth, cardExpYear, cardCVC, name, addressLine1, addressLine2, 
-    addressCity, addressState, zip, addressCountry, currency, metadata);
+    Card card = new Card(cardNumber, cardExpMonth, cardExpYear, cardCVC);
+    card.setName(name);
+    card.setAddressLine1(addressLine1);
+    card.setAddressLine2(addressLine2);
+    card.setAddressCity(addressCity);
+    card.setAddressState(addressState);
+    card.setAddressCountry(addressCountry);
+    card.setCurrency(currency);
 
     if (!card.validateCard()) {
       promise.reject(CARD_INVALID);
