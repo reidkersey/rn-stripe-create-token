@@ -18,7 +18,11 @@ import com.stripe.android.TokenCallback;
 import com.stripe.android.model.Token;
 import com.stripe.android.model.BankAccount;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.Size;
+
 import java.util.Date;
+import java.util.Map;
 
 import android.widget.Toast;
 import android.content.Context;
@@ -68,11 +72,24 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void createToken(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC,
+  public void createToken(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC, String name, String zip, final Promise promise) {
+    this.createToken_all(cardNumber, cardExpMonth, cardExpYear, cardCVC, name, zip, null, null, null, null, null, null, null, promise);
+  }
+
+  @ReactMethod
+  public void createToken_all(String cardNumber, Integer cardExpMonth, Integer cardExpYear, String cardCVC, String name, String zip,
+            String addressLine1,
+            String addressLine2,
+            String addressCity,
+            String addressState,
+            String addressCountry,
+            String currency,
+            @Nullable Map<String, String> metadata,
       final Promise promise) {
     Context ctx = reactContext.getApplicationContext();
     
-    Card card = new Card(cardNumber, cardExpMonth, cardExpYear, cardCVC);
+    Card card = new Card(cardNumber, cardExpMonth, cardExpYear, cardCVC, name, addressLine1, addressLine2, 
+    addressCity, addressState, zip, addressCountry, currency, metadata);
 
     if (!card.validateCard()) {
       promise.reject(CARD_INVALID);
