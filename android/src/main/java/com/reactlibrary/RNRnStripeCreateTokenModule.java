@@ -90,6 +90,7 @@ public class RNRnStripeCreateTokenModule extends ReactContextBaseJavaModule {
     card.setAddressLine2(addressLine2);
     card.setAddressCity(addressCity);
     card.setAddressState(addressState);
+    card.setAddressZip(zip);
     card.setAddressCountry(addressCountry);
     card.setCurrency(currency);
 
